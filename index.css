@@ -1,0 +1,185 @@
+canvas {
+  /* border: 1px solid black; */
+}
+
+.top-menu, .opponent-top-menu {
+  height: 150px;
+  width: 600px;
+  background-color: skyblue;
+  font-family: "Lacquer", system-ui;
+  font-size: 20px;
+}
+
+/* .top-menu {
+  margin-right: 300px;
+} */
+
+.opponent-top-menu {
+  height: 150px;
+  width: 600px;
+  background-color: skyblue;
+  font-family: "Lacquer", system-ui;
+  font-size: 20px;
+}
+
+.side-menu {
+  height: 450px;
+  width: 300px; 
+  background-color: skyblue;
+  font-family: "Lacquer", system-ui;
+  font-size: 20px;
+  /* display:none; */
+}
+
+.wave-info {
+  color: white;
+  font-size: 30px;
+}
+
+.level-select {
+  width: 600px;
+  background-color: #fff;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.level-container {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+}
+
+.level-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 45%;
+}
+
+.map-image {
+  width: 100%;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.level-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.3s ease;
+}
+
+.level-btn:hover {
+  background-color: #45a049;
+}
+
+.gameMenuPage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 600px;
+  height: 400px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.gameMenuPage h1 {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.gameMenuPage button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  color: #fff;
+  background-color: #007BFF;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.gameButton button:hover {
+  background-color: #0056b3;
+}
+
+.game-container {
+  display: flex;
+  align-items: flex-start; /* Align items at the start of the container */
+}
+
+#game_screen, .side-menu {
+  margin: 0;
+  padding: 0;
+  display: block; /* Ensures that the canvas and side-menu elements are treated as block-level elements */
+}
+
+.side-menu div {
+  margin-bottom: 10px; /* Add space between each image block */
+}
+
+.side-menu span {
+  display: block; /* Ensure the dash is on a new line */
+  margin-top: 5px; /* Optional: Add space between the image and dash */
+}
+
+
+.tower-img {
+  height: 30px;
+  width: 30px;
+  display: inline-block;
+}
+
+.tower-description-headings {
+  font-size: 30px;
+}
+
+.tower-description {
+  display: inline-block !important;
+  font-size: 15px;
+}
+
+.menus-container {
+  display: grid;
+  grid-template-columns: auto auto; /* Adjust columns as per your requirement */
+  gap: 300px; /* Add space between the two menus */
+}
+
+.top-menu, .opponent-top-menu {
+  height: 150px;
+  width: 600px;
+  background-color: skyblue;
+  font-family: "Lacquer", system-ui;
+  font-size: 20px;
+}
+
+body {
+  display: flex;
+  margin: 0;
+  height: 100vh;
+}
+
+.side-menu {
+  width: 300px;
+  background-color: #f4f4f4;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 20px;
+  background-color: #fff;
+}

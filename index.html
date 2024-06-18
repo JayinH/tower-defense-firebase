@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tower Defense Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lacquer&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="index.css" />
+</head>
+
+<body>
+  <div class="game-wrapper" hidden>
+    <div class="menu d-inline-block">
+      <div class="menus-container">
+        <div class="top-menu" hidden>
+          <div class="row justify-content-between">
+            <div class="col">
+              <div class="lives">Lives: 20</div>
+              <div class="money">Money: #225</div>
+            </div>
+            <div class="col text-center">
+              <div class="wave-info">
+                <div class="wave">Preparing to start Wave 1</div>
+              </div>
+            </div>
+            <div class="col text-end">
+              <div class="enemies-killed">Total enemies killed: 0</div>
+              <div class="lives-lost">5 seconds remaining</div>
+            </div>
+          </div>
+        </div>
+        <div class="opponent-top-menu" hidden>
+          <div class="row justify-content-between">
+            <div class="col">
+              <div class="lives">Lives: 20</div>
+              <div class="money">Money: #225</div>
+            </div>
+            <div class="col text-center">
+              <div class="wave-info">
+                <div class="wave">Preparing to start Wave 1</div>
+              </div>
+            </div>
+            <div class="col text-end">
+              <div class="enemies-killed">Total enemies kills: 0</div>
+              <div class="lives-lost">5 seconds remaining</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+   
+   
+
+    <div class="game-container">
+      <canvas id="game_screen"></canvas>
+      <div class="side-menu" style="display: none;">
+        <div class="tower-description-heading">Tower Descriptions</div>
+        <span>
+          <img src="Images/LinearTower.png" class="tower-img" alt="">
+          <span class="tower-description">- Linear Tower</span>
+        </span>
+        <span>
+          <img src="Images/DirectionTower.png" class="tower-img" alt="">
+          <span class="tower-description">- Direction Tower</span>
+        </span>
+        <span>
+          <img src="Images/PathTower.png" class="tower-img" alt="">
+          <span class="tower-description">- Path Tower</span>
+        </span>
+        <span>
+          <img src="Images/RadiusTower.png" class="tower-img" alt="">
+          <span class="tower-description">- Radius Tower</span>
+        </span>
+      </div>
+      <canvas id="opponent_screen"></canvas>
+    </div>
+    <div class="selection-screen-canvas">
+
+    
+    <canvas id="selection_screen"></canvas>
+    <div class="send-enemy-menu">
+      <button class="send-enemy-button" value="1">Send enemy 1 - $10</button>
+      <button class="send-enemy-button" value="2">Send enemy 2 - $15</button>
+      <button class="send-enemy-button" value="3">Send enemy 3 - $15</button>
+      <button class="send-enemy-button" value="4">Send enemy 4 - $50</button>
+      <button class="send-enemy-button" value="5">Send enemy 5 - $15</button>
+      <button class="send-enemy-button" value="6">Send enemy 6 - $17</button>
+    </div>
+  </div>
+  </div>
+    <img src="Images/arrow.png" alt="Arrow" id="arrow" width="100" height="100" hidden />
+    <!-- <img src="Images/balloonBattles.PNG" alt="Balloon Battles text" id="balloonBattles" width="600" height="400"
+      hidden /> -->
+    <!-- <img src="Images/play.PNG" alt="Play button" id="playButton" width="600" height="400" hidden /> -->
+    <img src="Images/catapult2.png" alt="Catapult" id="catapult" width="100" height="100" hidden />
+    <img src="Images/lightning.png" alt="Lightning" id="lightning" width="100" height="100" hidden />
+
+   
+  </div>
+  <div class="game-over-menu game-menu">
+    <div hidden id="playAgain" class="gameMenuId">
+      <div class="playAgainPage gameMenuPage">
+        <h1>Game Over!</h1>
+        <div class="w-or-l"></div>
+        <div class="final-enemies-killed"></div>
+        <div class="waves-completed"></div>
+        
+        <br>
+
+        <div class="opponent-final-enemies-killed"></div>
+        <div class="opponent-waves-completed"></div>
+        <button id="playAgainButton" class="gameButton">Play Again</button>
+      </div>
+    </div>
+  </div>
+  <div class="level-select" id="levelSelect" hidden>
+    <div class="level-container">
+      <div class="level-button">
+        <img src="Images/level1.png" alt="Easy Map" class="map-image">
+        <span class="button-1-place"><button class="level-btn" value="1">Map 1</button></span>
+      </div>
+      <div class="level-button">
+        <img src="Images/level2.png" alt="Hard Map" class="map-image">
+        <span class="button-2-place"><button class="level-btn" value="2">Map 2</button></span>
+      </div>
+      
+    </div>
+    <div>If it's your lucky day, the game may give you a tower to start off with ;)</div>
+  </div>
+  <div class="game-start-menu game-menu">
+    <div id="gameStart" class="gameMenuId">
+      <div class="gameStartPage gameMenuPage text-center">
+        <h1>Welcome to Balloon Battles! Enter a nickname to begin:</h1>
+        <div class="row"><div class="col-12"><input type="text" class="nickname form-control" placeholder="Nickname"></div></div>
+        <button id="gameStartButton" class="gameButton mt-3 text-center">Play game</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="host-or-join-menu game-menu">
+    <div hidden id="hostOrJoinStart" class="gameMenuId">
+      <div class="hostOrJoinPage gameMenuPage">
+        <h1>Hosting or joining</h1>
+        <span>
+        <button id="hostGameButton" class="gameButton">Host a game</button>
+        <button id="joinGameButton" class="gameButton">Join a game</button>
+      </span>
+      <h5 class="disconnect-message mt-3" hidden>You have been disconnected since the opponent left the game.</h5>
+      </div>
+    </div>
+  </div>
+
+  <div class="host-menu game-menu">
+    <div hidden id="hostStart" class="gameMenuId">
+      <div class="hostPage gameMenuPage">
+        <h1 class="text-center">Here is your randomly generated code: </h1>
+       <h2 class="random-code"></h2>
+        <h4 class="player-joined"></h4>
+        <h4 class="guest-disconnect"></h4>
+        <button class="begin-game-loop" hidden>Begin Game</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="join-menu game-menu">
+    <div hidden id="joinStart" class="gameMenuId">
+      <div class="joinPage gameMenuPage">
+        <h1>Enter game code:</h1>
+        <h6 class="error-message"></h6>
+        <span>
+          <div class="row"><div class="col-12"><input type="text" class="code-input form-control" placeholder="e.g. A6g4"></div></div>
+        <button id="codeButton" class="gameButton mt-3 text-center">Enter</button>
+      </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="guest-waiting-menu game-menu">
+    <div hidden id="guestWaitingStart" class="gameMenuId">
+      <div class="guestWaitingPage gameMenuPage">
+        <h1 class="text-center waiting-text"></h1>
+      </div>
+    </div>
+  </div>
+<!-- 
+  <script src="dist/pathclass.js"></script>
+  <script src="dist/mapbuilder.js"></script>
+  <script src="dist/player.js"></script>
+  <script src="dist/gametracker.js"></script>
+  <script src="dist/command.js"></script>
+  <script src="dist/enemy.js"></script>
+  <script src="dist/bullet.js"></script>
+  <script src="dist/tower.js"></script>
+  <script src="dist/towerModifications.js"></script>
+  <script src="dist/towerManager.js"></script>
+  <script src="dist/controller.js"></script>
+  <script src="dist/healthbar.js"></script>
+  <script src="dist/wavemaker.js"></script>
+  <script src="dist/game.js"></script>
+  <script src="dist/towerDrawing.js"></script>
+  <script src="dist/gamecanvas.js"></script>
+  <script src="dist/selectionCanvas.js"></script>
+  <script src="dist/canvasmanager.js"></script>
+  <script src="dist/paintSelection.js"></script>
+  <script src="dist/menu.js"></script> -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
+  <script type="module" src="dist/index.js"></script>
+</body>
+
+</html>

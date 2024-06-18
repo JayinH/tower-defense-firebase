@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+      "target": "ESnext",
+      "module": "esnext",
+      "moduleResolution": "bundler",
+      "outDir": "dist", //optionally use “” to not use an output folder
+      "sourceMap": true,
+    },
+    "include": ["src/**/*"], 
+  }
+    
