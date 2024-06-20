@@ -172,8 +172,6 @@ class MapBuilder implements MapBuilderInfo{
                 }
             }
             PathBlock.startpointX = this._pathBlocks[0].centerX;
-            // console.log(PathBlock.startpointX)
-            // console.log(PathBlock.startpointY)
             PathBlock.startpointY = this._pathBlocks[0].centerY;
 
             PathBlock.endpointX = this._pathBlocks[this._pathBlocks.length - 1].centerX;

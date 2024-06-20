@@ -253,7 +253,6 @@ class DirectionTower extends BulletTower implements DirectionTowerInfo{
 
     public addDirection(direction: string): void {
         this._directions.push(direction);
-        console.log(this._directions)
     }
 
     /**
@@ -334,7 +333,6 @@ class LinearRadiusTower extends BulletTower implements LinearRadiusTowerInfo {
     }
 
     public setFiringMethod(method: string): void {
-        console.log('method changde')
         this._firingMethod = method;
     }
 

@@ -28,16 +28,12 @@ class Player implements PlayerInformation {
     private _id: string = nanoid(10);
     private _money: number = 225;
     private _lives: number = 20;
+    private gameInstance: string
     public won = false;
     public lost = false;
     public draw = false;
     private _isAlive: boolean = true;
     constructor(private _nickname: string, private mainOrOpponent?: string) {
-        // update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
-            // money: this._money,
-            // lives: this._lives,
-            
-        // }).then(() => { })
     }
 
     public get nickname() {
@@ -76,9 +72,20 @@ class Player implements PlayerInformation {
         }
     }
 
-    public resetStats() {
-        this._lives = 20;
+    public resetStats(gameInstance: string) {
+        this.gameInstance = gameInstance;
+        this._lives = 1;
         this._money = 225;
+        this._isAlive = true;
+        this.won = false;
+        this.lost = false;
+        update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
+            lives: this.lives,
+            money: this._money,
+            isAlive: this._isAlive,
+            won: this.won,
+            lost: this.lost
+        }).then(() => { })
     }
 
     public get id(): string {
@@ -103,25 +110,22 @@ class Player implements PlayerInformation {
 
             this._money -= money;
             update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
-                money: this.money
-            }).then(() => { })
+                money: this._money
+            }).then(() => { 
+            })
         }
     }
 
     public receiveMoney(money: number) {
-
         if (this.mainOrOpponent !== "opponent") {
             if (money <= 0) {
                 throw new Error("Not a valid input");
             }
-
             this._money += money;
             update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
                 money: this.money
             }).then(() => { })
         }
-
-
     }
 }
 

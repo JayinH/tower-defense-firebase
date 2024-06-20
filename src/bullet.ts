@@ -133,7 +133,6 @@ class LinearTowerBullet extends Bullet implements BulletPath {
             let dyS = 0
             let distanceS = 0;
             let distanceE = 0;
-            // console.log(furthestSquare)
             if (furthestSquare >= this.enemyPath.length - 1) {
                 dxE = enemy.x - this.END_OF_PATH_X;
                 dyE = enemy.y - this.END_OF_PATH_Y;
@@ -366,15 +365,12 @@ class LinearRadiusTowerBullet extends Bullet {
                     targetEnemy = enemy;
                 }
             }
-            // if (!enemy.active) this.active = false;
             if (this._active) {
-                // console.log(targetEnemy)
                 this._targetX = targetEnemy.x;
                 this._targetY = targetEnemy.y;
                 const xDistance = this._x - this._targetX;
                 const yDistance = this._y - this._targetY;
                 const totalDistance = Math.sqrt(Math.pow((this._x - this._targetX), 2) + Math.pow((this._y - this._targetY), 2))
-                // console.log(xDistance, yDistance, totalDistance)
                 this.directBullet(xDistance, yDistance, totalDistance, targetEnemy)
             }
 
@@ -416,16 +412,13 @@ class LinearRadiusTowerBullet extends Bullet {
                     targetEnemy = enemy;
                 }
             }
-            // if (!enemy.active) this.active = false;
             if (this._active) {
-                // console.log(targetEnemy)
                 this._targetX = targetEnemy.x;
                 this._targetY = targetEnemy.y;
                 const xDistance = this._x - this._targetX;
                 const yDistance = this._y - this._targetY;
-                const totalDistance = Math.sqrt(Math.pow((this._x - this._targetX), 2) + Math.pow((this._y - this._targetY), 2))
-                // console.log(xDistance, yDistance, totalDistance)
-                this.directBullet(xDistance, yDistance, totalDistance, targetEnemy)
+                const totalDistance = Math.sqrt(Math.pow((this._x - this._targetX), 2) + Math.pow((this._y - this._targetY), 2));
+                this.directBullet(xDistance, yDistance, totalDistance, targetEnemy);
             }
 
         } else {
@@ -444,25 +437,19 @@ class LinearRadiusTowerBullet extends Bullet {
                 enemiesInRange.push(enemy);
             }
         }
-        // console.log(enemiesInRange);
         if (enemiesInRange.length) {
             let targetEnemy = enemiesInRange[0];
             for (let enemy of enemiesInRange) {
-                
-                // console.log(enemy.HP)
                 if (enemy.HP > targetEnemy.HP) {
                     targetEnemy = enemy;
                 }
             }
-            // if (!enemy.active) this.active = false;
             if (this._active) {
-                // console.log(targetEnemy)
                 this._targetX = targetEnemy.x;
                 this._targetY = targetEnemy.y;
                 const xDistance = this._x - this._targetX;
                 const yDistance = this._y - this._targetY;
                 const totalDistance = Math.sqrt(Math.pow((this._x - this._targetX), 2) + Math.pow((this._y - this._targetY), 2))
-                // console.log(xDistance, yDistance, totalDistance)
                 this.directBullet(xDistance, yDistance, totalDistance, targetEnemy)
             }
 

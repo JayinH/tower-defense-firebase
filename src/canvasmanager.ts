@@ -1,4 +1,4 @@
-import {StartMenuCommand, HostOrJoinCommand, HostMenuCommand, JoinMenuCommand, JoinHostRoomCommand, LevelSelectionCommand, BeginGameCommand} from "./command.js"
+import { StartMenuCommand, HostOrJoinCommand, HostMenuCommand, JoinMenuCommand, JoinHostRoomCommand, LevelSelectionCommand, BeginGameCommand } from "./command.js"
 import { Controller } from "./controller.js";
 import { Game } from "./game.js";
 import { GameCanvas } from "./gamecanvas.js";
@@ -23,20 +23,17 @@ class CanvasManager {
     private joinMenu: CompositeMenu = new CompositeMenu("Enter a code")
     private hostMenu: CompositeMenu = new CompositeMenu("Here is the code");
     private waitForStartMenu: CompositeMenu = new CompositeMenu("Wait for host to start the game");
-    private hostGameLoopMenu: CompositeMenu = new CompositeMenu("Host game loop");
-    private gameWrapper = document.querySelector('.game-wrapper') as HTMLDivElement;
 
     private _element: HTMLCanvasElement = document.getElementById(
         "game_screen"
     ) as HTMLCanvasElement;
     public context = this.element.getContext("2d") as CanvasRenderingContext2D;
     private gameContainer = document.querySelector('.game-container') as HTMLDivElement;
-
-        private topMenu = document.querySelector(".top-menu") as HTMLDivElement;
-        private opponentTopMenu = document.querySelector(".opponent-top-menu") as HTMLDivElement;
+    private topMenu = document.querySelector(".top-menu") as HTMLDivElement;
+    private opponentTopMenu = document.querySelector(".opponent-top-menu") as HTMLDivElement;
     private sideMenu = document.querySelector(".side-menu") as HTMLDivElement;
     private selectionScreen = document.querySelector('.selection-screen-canvas') as HTMLDivElement;
-    private constructor() { 
+    private constructor() {
         this.initialize();
     }
     public get element(): HTMLCanvasElement {
@@ -46,7 +43,6 @@ class CanvasManager {
         this._game = null;
         CanvasManager.GameCanvas.endGame();
     }
-
 
     public set opponentId(id: string) {
         this._opponentId = id;
@@ -59,7 +55,7 @@ class CanvasManager {
     public setStage(stage: string) {
         this._stage = stage;
         return this._stage;
-    } 
+    }
 
     public get stage() {
         return this._stage;
@@ -67,18 +63,8 @@ class CanvasManager {
 
     public setGame(mapNumber: number) {
         this._game = new Game();
-        console.log(CanvasManager.instance.player)
-        this._game.initialize(mapNumber, CanvasManager.instance.player, "main");
+        this._game.initialize(mapNumber, CanvasManager.instance.player, CanvasManager.instance.connectionInstance);
         return this._game;
-    }
-
-    public setOpponentGame(mapNumber: number) {
-        // console.log(CanvasManager.instance.opponent);
-        // this._opponentGame = new Game();
-        // this._opponentGame.initialize(mapNumber, CanvasManager.instance.opponent, "opponent");
-        // this._opponentGame = new Game();
-        // this._opponentGame.initialize(mapNumber, CanvasManager.instance.opponent, "opponent");
-        // return this._opponentGame;
     }
 
     public get opponentGame() {
@@ -116,30 +102,25 @@ class CanvasManager {
 
     public initialize() {
         Controller.instance;
-        this.composeStartMenu();
+        this.composeAllMenus();
         this.startMenu.executeCommand();
     }
 
-    private composeStartMenu(): void {
-        // const hostItem = new MenuItem("Host")
-        // const joinItem = new MenuItem("Join").addCommand(JoinGameCommand);
+    /**
+     * All menus are composed with respective menu items/commands
+     */
+    private composeAllMenus(): void {
         const map1Item = new MenuItem("Map 1");
         map1Item.addCommand(new BeginGameCommand(1));
         const map2Item = new MenuItem("Map 2");
         map2Item.addCommand(new BeginGameCommand(2));
-
         this.waitForStartMenu.addCommand(new JoinHostRoomCommand(this.waitForStartMenu));
-        
+
         this.hostMenu.addCommand(new HostMenuCommand(this.hostMenu))
-        .addMenuItem(this.levelSelectMenu
-            .addCommand
-            (new LevelSelectionCommand(this.levelSelectMenu)))
-            
-            
-        // .addCommand(new LevelSelectionCommand(this.levelSelectMenu))
+            .addMenuItem(this.levelSelectMenu
+                .addCommand
+                (new LevelSelectionCommand(this.levelSelectMenu)))
         this.joinMenu.addCommand(new JoinMenuCommand(this.joinMenu)).addMenuItem(this.waitForStartMenu);
-        // .addCommand(new JoinHostRoomCommand(this.joinMenu));
-        // this.joinMenu.addMenuItem(this.waitForStartMenu);
         this.hostOrJoinMenu.addCommand(new HostOrJoinCommand(this.hostOrJoinMenu));
         this.hostOrJoinMenu.addMenuItem(this.hostMenu).addMenuItem(this.joinMenu);
         this.levelSelectMenu.addMenuItem(map1Item).addMenuItem(map2Item).addMenuItem(this.hostMenu);
@@ -157,13 +138,16 @@ class CanvasManager {
         this.selectionScreen.hidden = false;
         this.gameContainer.hidden = false;
         CanvasManager.GameCanvas.setGame();
-        CanvasManager.GameCanvas.setOpponentGame();
         this.SelectionCanvas = new SelectionCanvas();
         this.SelectionCanvas.initialize();
     }
 
-    public replay() {
+    public replayHost() {
         this.levelSelectMenu.executeCommand();
+    }
+
+    public replayOpponent() {
+        this.waitForStartMenu.executeCommand();
     }
 
     public static get instance(): CanvasManager {
@@ -174,4 +158,4 @@ class CanvasManager {
     }
 }
 
-export {CanvasManager}
+export { CanvasManager }
