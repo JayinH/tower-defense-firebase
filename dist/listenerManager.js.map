@@ -1,0 +1,1 @@
+{"version":3,"file":"listenerManager.js","sourceRoot":"","sources":["../src/listenerManager.ts"],"names":[],"mappings":"AAAA,MAAM,eAAe;IACT,kBAAkB,GAAG,IAAI,CAAC;IAClC;IAEA,CAAC;IAEM,qBAAqB;QACxB,OAAO,IAAI,CAAC,kBAAkB,CAAC;IACnC,CAAC;IAEM,qBAAqB,CAAC,QAAQ;QACjC,IAAI,CAAC,kBAAkB,GAAG,QAAQ,CAAC;IACvC,CAAC;CAGJ;AAED,OAAO,EAAC,eAAe,EAAC,CAAA"}

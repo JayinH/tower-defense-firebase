@@ -13,45 +13,8 @@ import { remove, get, update, onChildAdded, onChildRemoved, ref,
 //@ts-ignore Import module
  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { FirebaseClient } from "./firebaseApp.js";
-import { BulletTower, DirectionTower, LinearRadiusTower, LinearTower, PathTower } from "./tower.js";
-// interface GameConstants {
-//     FPS: number,
-//     TIME_INTERVAL: number,
-//     ENEMY_SPAWN_X: number,
-//     ENEMY_SPAWN_Y: number,
-//     ENEMY_RADIUS: number,
-// }
-// interface GameEnemyInfo {
-//     enemies: Enemy[],
-//     enemyCounter: number,
-//     allEnemyInfo: [{ x: number, y: number, r: number, level: number }],
-//     enemyInterval: number,
-// }
-// interface GameMapInfo {
-//     pathBlocks: PathBlock[],
-//     grassBlocks: GrassBlock[],
-//     mapBuilder: MapBuilder,
-//     mapInformation: [GrassBlock[], PathBlock[]] | undefined | void,
-// }
-// interface GameWaveInfo {
-//     wave: Wave,
-//     waveInfo: [[{ x: number, y: number, r: number, level: number }], number],
-//     ongoingWave: boolean
-// }
-// interface GameTowerInfo {
-//     towerManager: TowerManager,
-//     towerModificationsManager: TowerModificationsManager,
-// }
-// interface GamePlayer {
-//     // player: Player,
-// }
-// interface GameActive {
-//     active: boolean,
-// }
-// interface GameHoldsGameTrackerInfo {
-//     gameTracker: GameTracker,
-// }
 class OpponentGame {
+    gameInstance;
     _active = true;
     FPS = 60;
     TIME_INTERVAL = 1000 / this.FPS;
@@ -78,55 +41,62 @@ class OpponentGame {
     _allEnemyInfo = this._waveInfo[0];
     _enemyInterval = 10;
     _id = nanoid(10);
-    constructor(
-    // private mapSelection: number,
-    ) {
-        //    this.intialize(2);
+    constructor(gameInstance) {
+        this.gameInstance = gameInstance;
     }
     get id() {
         return this._id;
     }
-    initialize(mapSelection, player, mainOrOpponent) {
+    initialize(mapSelection, player) {
         this.context = CanvasManager.GameCanvas.opponentContext;
-        this._towerManager = new TowerManager(this.context, "opponent");
+        this._towerManager = new TowerManager(this.context, this.gameInstance, "opponent");
         this._player = player;
-        console.log(this._player);
         this.mapSelection = mapSelection;
         if (this.mapSelection === 1)
             this.path = [[0, 9], [1, 9], [2, 9], [3, 9], [3, 8], [3, 7], [2, 7], [1, 7], [1, 6], [1, 5], [1, 4], [1, 3], [1, 2], [1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [5, 2], [5, 3], [4, 3], [3, 3], [3, 4], [3, 5], [4, 5], [5, 5], [5, 6], [5, 7], [5, 8], [5, 9], [6, 9], [7, 9], [7, 8], [7, 7], [7, 6], [7, 5], [7, 4], [7, 3], [7, 2], [8, 2]];
         if (this.mapSelection === 2)
             this.path = [[5, 0], [5, 1], [5, 2], [4, 2], [3, 2], [3, 1], [2, 1], [1, 1], [1, 2], [1, 3], [1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4], [7, 5], [7, 6], [7, 7], [7, 8], [7, 9], [7, 10], [6, 10], [5, 10], [4, 10], [3, 10], [2, 10], [1, 10], [1, 9], [1, 8], [2, 8], [3, 8], [4, 8], [5, 8], [5, 7], [5, 6], [4, 6], [3, 6], [2, 6], [1, 6], [0, 6]];
         this._mapBuilder = new MapBuilder(this.context, "#006400", "green", "orange", this.path, null, null, 12);
-        this._gameTracker = new GameTracker(this._player, "opponent");
-        this._towerModificationsManager = new TowerModificationsManager(this._player);
+        this._gameTracker = new GameTracker(this._player, this.gameInstance, "opponent");
+        this._towerModificationsManager = new TowerModificationsManager(this._player, this.gameInstance);
         this.initializeGame();
     }
     mainLoop() {
-        // return new Promise((resolve) => {
         this.mainInterval = setInterval(() => {
+            if (!this._active)
+                clearInterval(this.mainInterval);
             this.clearScreen();
             this.update();
             this.drawEverything();
         }, this.TIME_INTERVAL);
-        // })
     }
+    /**
+    * Handles players disconnecting from the game
+    */
     listenForDisconnect() {
-        const playersRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players`);
+        const playersRef = ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players`);
         onChildRemoved(playersRef, (snapshot) => {
             this.handlePlayerDelete();
         });
     }
+    /**
+        * Ends the game when a player disconnects
+        */
     handlePlayerDelete() {
         clearInterval(this.mainInterval);
         this.inactivate();
     }
+    /**
+  * Ends the wave when ongoing wave is equal to false
+  * Ensures that the split screen has confirmed this before deleting it
+  * the bullet counter resets, to ensure that it fires at the same time as the main screen during the next wave
+  */
     listenForWaveEnd() {
-        const waveEndRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/ongoingWave`);
+        const waveEndRef = ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.opponentId}/ongoingWave`);
         onChildAdded(waveEndRef, (snapshot) => {
             const waveEnd = snapshot.val();
             const waveKey = snapshot.key;
             if (waveEnd.ongoingWave === false && !waveEnd.confirmedByOpponent) {
-                // Run your code to handle the new tower here
                 this._ongoingWave = false;
                 for (let bulletTower of this.towerManager.bulletTowers) {
                     bulletTower.resetBulletCounter();
@@ -134,151 +104,32 @@ class OpponentGame {
                 this._towerManager.inactivateBullets();
                 this._enemies = [];
                 this._player.receiveMoney(20);
-                // Create a reference to the tower in the database
-                const towersRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/ongoingWave`);
-                // After handling the tower, remove it from the database
-                update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/ongoingWave/${waveKey}`), {
+                update(ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.opponentId}/ongoingWave/${waveKey}`), {
                     confirmedByOpponent: true
                 }).then(() => {
-                    // Check if opponent has also confirmed
                     if (waveEnd.confirmedByPlayer) {
-                        remove(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/ongoingWave/${waveKey}`)).then(() => {
-                            console.log('Wave ended');
+                        remove(ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.opponentId}/ongoingWave/${waveKey}`)).then(() => {
                         }).catch((error) => {
-                            console.error('Error removing wave:', error);
+                            throw new Error('Error removing wave:', error);
                         });
                     }
                 }).catch((error) => {
-                    console.error('Error confirming wave end:', error);
+                    throw new Error('Error confirming wave end:', error);
                 });
             }
         });
     }
-    listenForNewTower() {
-        const towerRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/towers`);
-        onChildAdded(towerRef, (snapshot) => {
-            const tower = snapshot.val();
-            const towerKey = snapshot.key;
-            if (tower && !tower.confirmedByPlayer) {
-                // Run your code to handle the new tower here
-                if (tower.type === "Linear") {
-                    const newTower = new LinearTower(this.context, (tower.xSquare - 1) * 50, (tower.ySquare - 1) * 50, 50, 50, this.towerManager.enemyPath);
-                    this.towerManager.towers.push(newTower);
-                    this.towerManager.bulletTowers.push(newTower);
-                    this.player.spendMoney(LinearTower.cost);
-                }
-                else if (tower.type === "Direction") {
-                    const newTower = new DirectionTower(this.context, (tower.xSquare - 1) * 50, (tower.ySquare - 1) * 50, 50, 50, [tower.direction]);
-                    this.towerManager.towers.push(newTower);
-                    this.towerManager.bulletTowers.push(newTower);
-                    this.player.spendMoney(DirectionTower.cost);
-                }
-                else if (tower.type === "Linear Radius") {
-                    const newTower = new LinearRadiusTower(this.context, (tower.xSquare - 1) * 50, (tower.ySquare - 1) * 50, 50, 50, this.towerManager.enemyPath);
-                    this.towerManager.towers.push(newTower);
-                    this.towerManager.bulletTowers.push(newTower);
-                    this.player.spendMoney(LinearRadiusTower.cost);
-                }
-                else if (tower.type === "Path") {
-                    const newTower = new PathTower(this.context, (tower.xSquare - 1) * 50, (tower.ySquare - 1) * 50, 50, 50);
-                    this.towerManager.towers.push(newTower);
-                    this.player.spendMoney(PathTower.cost);
-                }
-                // Create a reference to the tower in the database
-                const towerRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/towers`);
-                // After handling the tower, remove it from the database
-                update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/towers/${towerKey}`), {
-                    confirmedByOpponent: true
-                }).then(() => {
-                    // Check if opponent has also confirmed
-                    if (tower.confirmedByPlayer) {
-                        remove(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/towers/${towerKey}`)).then(() => {
-                            // console.log('Wave ended');
-                        }).catch((error) => {
-                            console.error('Error removing tower:', error);
-                        });
-                    }
-                }).catch((error) => {
-                    console.error('Error confirming tower end:', error);
-                });
-            }
-        });
-    }
-    listenForTowerUpgrades() {
-        const towersRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/towerUpgrades`);
-        onChildAdded(towersRef, (snapshot) => {
-            const towerUpgrade = snapshot.val();
-            // console.log(tower);
-            const towerKey = snapshot.key;
-            if (towerUpgrade) {
-                // Run your code to handle the new tower here
-                const selectedTower = this.towerManager.towers[towerUpgrade.towerIndex];
-                this.player.spendMoney(selectedTower.upgradeCost);
-                selectedTower.increaseUpgradeCost();
-                if (towerUpgrade.upgrade === "Increase Speed") {
-                    selectedTower.addUpgrade("Increase Speed");
-                    if (selectedTower instanceof BulletTower)
-                        selectedTower.upgradeSpeed();
-                }
-                else if (towerUpgrade.upgrade === "Random Bullet Color") {
-                    selectedTower.addUpgrade("Random Bullet Color");
-                    if (selectedTower instanceof LinearTower)
-                        selectedTower.randomizeBulletColor();
-                }
-                else if (towerUpgrade.upgrade === "Increase Attack") {
-                    selectedTower.addUpgrade("Increase Attack");
-                    if (selectedTower instanceof LinearTower || selectedTower instanceof PathTower)
-                        selectedTower.upgradeAttack();
-                }
-                else if (towerUpgrade.upgrade === "Increase Firing Radius") {
-                    selectedTower.addUpgrade("Increase Firing Radius");
-                    if (selectedTower instanceof LinearRadiusTower)
-                        selectedTower.upgradeFiringRadius();
-                }
-                else if (towerUpgrade.direction) {
-                    selectedTower.addUpgrade(towerUpgrade.upgrade);
-                    if (selectedTower instanceof DirectionTower)
-                        selectedTower.addDirection(towerUpgrade.direction);
-                }
-                // Create a reference to the tower in the database
-                const towersRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/towerUpgrades`);
-                // After handling the tower, remove it from the database
-                update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/towerUpgrades/${towerKey}`), {
-                    confirmedByOpponent: true
-                }).then(() => {
-                    // Check if opponent has also confirmed
-                    console.log('somehow were here');
-                    console.log(towerUpgrade.confirmedByPlayer);
-                    if (towerUpgrade.confirmedByPlayer) {
-                        remove(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/towerUpgrades/${towerKey}`)).then(() => {
-                            console.log('Tower upgraded successfully');
-                        }).catch((error) => {
-                            console.error('Error removing tower:', error);
-                        });
-                    }
-                }).catch((error) => {
-                    console.error('Error confirming tower upgrade:', error);
-                });
-            }
-        });
-    }
+    /**
+       * Listens to see if any new enemies are added to the database
+       * If a new enemy is added, it will spawn the enemy
+       */
     listenForEnemies() {
-        const enemiesRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/enemies`);
+        const enemiesRef = ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.opponentId}/enemies`);
         onChildAdded(enemiesRef, (snapshot) => {
             const enemy = snapshot.val();
             const enemyKey = snapshot.key;
             if (enemy) {
-                // Run your code to handle the new enemy here
-                console.log('New enemy added:', enemy);
-                // After handling the enemy, remove it from the database
-                // remove(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}/enemies/${enemyKey}`))
-                //     .then(() => {
                 this.spawnEnemy(true, parseInt(enemy));
-                console.log('Enemy removed successfully');
-                // })
-                // .catch((error) => {
-                //     console.error('Error removing enemy:', error);
-                // });
             }
         });
     }
@@ -342,9 +193,9 @@ class OpponentGame {
      */
     initializeGame() {
         this.listenForEnemies();
-        this.listenForNewTower();
+        this.towerManager.listenForNewTowerOpponent(this.player);
         this.listenForDisconnect();
-        this.listenForTowerUpgrades();
+        this.towerManager.listenForTowerUpgradesOpponent(this.player);
         this.listenForWaveEnd();
         if (this.active) {
             this._mapInformation = this._mapBuilder.buildMap();
@@ -355,12 +206,11 @@ class OpponentGame {
             }
             this._ENEMY_SPAWN_X = PathBlock.startpointX;
             this._ENEMY_SPAWN_Y = PathBlock.startpointY;
-            // CanvasManager.SelectionCanvas;
             CanvasManager.instance.SelectionCanvas.initialize();
             this._wave = new Wave();
             this._allEnemyInfo = this._wave.createNewWave()[0];
             this._gameTracker.totalEnemiesInWave = this._allEnemyInfo.length;
-            update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
+            update(ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.player.id}`), {
                 currentWave: 0,
                 doingWave: false,
                 enemiesKilledInWave: this.gameTracker.enemiesKilledInWave,
@@ -397,8 +247,11 @@ class OpponentGame {
             this._gameTracker.manageInBetweenWaves();
         }
     }
+    /**
+     * Constantly checks how much money/lives the main player (opponent) has and updates accordingly
+     */
     updatePlayer() {
-        const otherPlayerRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}`);
+        const otherPlayerRef = ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.opponentId}`);
         get(otherPlayerRef)
             .then((otherPlayerSnapshot) => {
             const otherPlayerData = otherPlayerSnapshot.val();
@@ -406,7 +259,7 @@ class OpponentGame {
             this.player.lives = otherPlayerData.lives;
         })
             .catch((error) => {
-            console.error("Error fetching other player status:", error);
+            throw new Error("Error fetching other player status:", error);
         });
     }
     checkPlayerStatus() {
@@ -439,7 +292,6 @@ class OpponentGame {
         this._towerManager.updateEnemies(this._enemies);
         if (!this._enemies.length && !this._allEnemyInfo.length) {
             this._towerManager.inactivateBullets();
-            // this._ongoingWave = false;
             if (this.gameTracker.currentWave === 10) {
                 this._active = false;
             }

@@ -34,7 +34,7 @@ class Wave implements WaveConstants, WaveInfo {
         switch (this._currentWave) {
             case 1:
                 for (let i = 0; i < 10; i++) {
-                    enemyInfo.push({ x: this.ENEMY_SPAWN_X, y: this.ENEMY_SPAWN_Y, r: this.ENEMY_RADIUS, level: 6 });
+                    enemyInfo.push({ x: this.ENEMY_SPAWN_X, y: this.ENEMY_SPAWN_Y, r: this.ENEMY_RADIUS, level: 1 });
                 }
                 break;
             case 2:

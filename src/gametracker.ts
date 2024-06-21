@@ -290,6 +290,10 @@ class GameTracker implements GameTrackerInfo, GameTrackerMethods {
         }
     }
 
+    /**
+     * 
+     * @param enemiesAmount - number of enemies in the wave
+     */
     public waveStart(enemiesAmount: number): void {
         this._currentWave++;
         if (this.opponentOrMain !== "opponent") {

@@ -3,7 +3,6 @@ import { PlantTower, TowerSelectionCommand, towerMoveSelection } from "./command
 import { GameCanvas } from "./gamecanvas.js";
 import { Player } from "./player.js";
 import { TowerDrawing } from "./towerDrawing.js";
-import { TowerModificationsManager } from "./towerModifications.js";
 class Controller {
     mouseX = 0;
     mouseY = 0;
@@ -25,7 +24,7 @@ class Controller {
     pathBlocks;
     towerManager;
     player = new Player("john");
-    towerModificationsManager = new TowerModificationsManager(this.player);
+    towerModificationsManager;
     constructor() {
         document.addEventListener("mousemove", (event) => this.updateMousePosition(event));
         this.clickListener = () => this.handleMouseClick1();
@@ -235,18 +234,21 @@ class Controller {
     clickTower() {
         const { x, y } = this.getCursorPosition();
         let towerClicked = false;
-        for (let i = 0; i < this.towerManager.towers.length; i++) {
-            const curTower = this.towerManager.towers[i];
-            if (curTower.x <= x && curTower.x + curTower.w >= x && curTower.y <= y && curTower.y + curTower.h >= y) {
-                this.selectedTower = this.towerManager.towers[i];
-                this.towerModificationsManager.setTower(this.selectedTower, i);
-                towerClicked = true;
+        try {
+            for (let i = 0; i < this.towerManager.towers.length; i++) {
+                const curTower = this.towerManager.towers[i];
+                if (curTower.x <= x && curTower.x + curTower.w >= x && curTower.y <= y && curTower.y + curTower.h >= y) {
+                    this.selectedTower = this.towerManager.towers[i];
+                    this.towerModificationsManager.setTower(this.selectedTower, i);
+                    towerClicked = true;
+                }
+            }
+            if (!towerClicked) {
+                this.selectedTower = null;
+                this.towerModificationsManager.defaultMenu();
             }
         }
-        if (!towerClicked) {
-            this.selectedTower = null;
-            this.towerModificationsManager.defaultMenu();
-        }
+        catch { }
     }
     static get instance() {
         if (!Controller._instance) {

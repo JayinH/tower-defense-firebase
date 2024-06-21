@@ -311,9 +311,7 @@ class StartMenuCommand implements Command {
             onDisconnect(gameRef)
                 .set(null)
                 .then(() => { })
-                .catch((error) => {
-                    throw new Error(`Error setting up onDisconnect: ${error.message}`);
-                });
+                .catch((error) => { });
             this.menu.items[0].executeCommand();
         })
     }
@@ -384,9 +382,7 @@ class HostMenuCommand implements Command {
                         }
                     }
                 }
-                else {
-                    throw new Error("Database not configured properly.");
-                }
+                
             },
             { onlyOnce: true }
         )
@@ -498,10 +494,6 @@ class JoinMenuCommand implements Command {
                                         this.joinStart.hidden = true;
                                         this.menu.items[0].executeCommand();
                                     }
-                                    else {
-                                        throw new Error("Database not configured properly.");
-                                    }
-
                                 },
                                 { onlyOnce: true }
                             )
@@ -579,9 +571,6 @@ class JoinHostRoomCommand implements Command {
                         this.handlePlayerDelete(snapshot.val());
                     });
                 }
-                else {
-                    throw new Error("Database not configured properly.");
-                }
             },
             { onlyOnce: true }
         )
@@ -606,8 +595,6 @@ class JoinHostRoomCommand implements Command {
                             }
                         }
                     }
-                } else {
-                    throw new Error("Database not configured properly.");
                 }
             },
             { onlyOnce: false }  // Listen for ongoing changes

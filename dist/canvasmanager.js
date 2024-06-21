@@ -22,8 +22,6 @@ class CanvasManager {
     joinMenu = new CompositeMenu("Enter a code");
     hostMenu = new CompositeMenu("Here is the code");
     waitForStartMenu = new CompositeMenu("Wait for host to start the game");
-    hostGameLoopMenu = new CompositeMenu("Host game loop");
-    gameWrapper = document.querySelector('.game-wrapper');
     _element = document.getElementById("game_screen");
     context = this.element.getContext("2d");
     gameContainer = document.querySelector('.game-container');
@@ -56,17 +54,8 @@ class CanvasManager {
     }
     setGame(mapNumber) {
         this._game = new Game();
-        console.log(CanvasManager.instance.player);
-        this._game.initialize(mapNumber, CanvasManager.instance.player, "main");
+        this._game.initialize(mapNumber, CanvasManager.instance.player, CanvasManager.instance.connectionInstance);
         return this._game;
-    }
-    setOpponentGame(mapNumber) {
-        // console.log(CanvasManager.instance.opponent);
-        // this._opponentGame = new Game();
-        // this._opponentGame.initialize(mapNumber, CanvasManager.instance.opponent, "opponent");
-        // this._opponentGame = new Game();
-        // this._opponentGame.initialize(mapNumber, CanvasManager.instance.opponent, "opponent");
-        // return this._opponentGame;
     }
     get opponentGame() {
         return this._opponentGame;
@@ -95,12 +84,13 @@ class CanvasManager {
     }
     initialize() {
         Controller.instance;
-        this.composeStartMenu();
+        this.composeAllMenus();
         this.startMenu.executeCommand();
     }
-    composeStartMenu() {
-        // const hostItem = new MenuItem("Host")
-        // const joinItem = new MenuItem("Join").addCommand(JoinGameCommand);
+    /**
+     * All menus are composed with respective menu items/commands
+     */
+    composeAllMenus() {
         const map1Item = new MenuItem("Map 1");
         map1Item.addCommand(new BeginGameCommand(1));
         const map2Item = new MenuItem("Map 2");
@@ -109,10 +99,7 @@ class CanvasManager {
         this.hostMenu.addCommand(new HostMenuCommand(this.hostMenu))
             .addMenuItem(this.levelSelectMenu
             .addCommand(new LevelSelectionCommand(this.levelSelectMenu)));
-        // .addCommand(new LevelSelectionCommand(this.levelSelectMenu))
         this.joinMenu.addCommand(new JoinMenuCommand(this.joinMenu)).addMenuItem(this.waitForStartMenu);
-        // .addCommand(new JoinHostRoomCommand(this.joinMenu));
-        // this.joinMenu.addMenuItem(this.waitForStartMenu);
         this.hostOrJoinMenu.addCommand(new HostOrJoinCommand(this.hostOrJoinMenu));
         this.hostOrJoinMenu.addMenuItem(this.hostMenu).addMenuItem(this.joinMenu);
         this.levelSelectMenu.addMenuItem(map1Item).addMenuItem(map2Item).addMenuItem(this.hostMenu);
@@ -127,12 +114,14 @@ class CanvasManager {
         this.selectionScreen.hidden = false;
         this.gameContainer.hidden = false;
         CanvasManager.GameCanvas.setGame();
-        CanvasManager.GameCanvas.setOpponentGame();
         this.SelectionCanvas = new SelectionCanvas();
         this.SelectionCanvas.initialize();
     }
-    replay() {
+    replayHost() {
         this.levelSelectMenu.executeCommand();
+    }
+    replayOpponent() {
+        this.waitForStartMenu.executeCommand();
     }
     static get instance() {
         if (!CanvasManager._instance) {

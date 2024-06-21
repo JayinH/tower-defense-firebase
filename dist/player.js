@@ -16,12 +16,8 @@ class Player {
     draw = false;
     _isAlive = true;
     constructor(_nickname, mainOrOpponent) {
-        // update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
-        // money: this._money,
-        // lives: this._lives,
         this._nickname = _nickname;
         this.mainOrOpponent = mainOrOpponent;
-        // }).then(() => { })
     }
     get nickname() {
         return this._nickname;
@@ -56,9 +52,22 @@ class Player {
             }).then(() => { });
         }
     }
+    /**
+     * Resets the player stats and updates the database so the opponent can read it
+     */
     resetStats() {
         this._lives = 20;
         this._money = 225;
+        this._isAlive = true;
+        this.won = false;
+        this.lost = false;
+        update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
+            lives: this.lives,
+            money: this._money,
+            isAlive: this._isAlive,
+            won: this.won,
+            lost: this.lost
+        }).then(() => { });
     }
     get id() {
         return this._id;
@@ -76,8 +85,9 @@ class Player {
             }
             this._money -= money;
             update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
-                money: this.money
-            }).then(() => { });
+                money: this._money
+            }).then(() => {
+            });
         }
     }
     receiveMoney(money) {

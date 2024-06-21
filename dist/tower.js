@@ -158,7 +158,6 @@ class DirectionTower extends BulletTower {
     }
     addDirection(direction) {
         this._directions.push(direction);
-        console.log(this._directions);
     }
     /**
      * for each direction, create a new bullet aimed at that direction, starting from the center of the tower
@@ -218,7 +217,6 @@ class LinearRadiusTower extends BulletTower {
         }
     }
     setFiringMethod(method) {
-        console.log('method changde');
         this._firingMethod = method;
     }
     /**

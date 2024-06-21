@@ -28,7 +28,6 @@ class Player implements PlayerInformation {
     private _id: string = nanoid(10);
     private _money: number = 225;
     private _lives: number = 20;
-    private gameInstance: string
     public won = false;
     public lost = false;
     public draw = false;
@@ -72,9 +71,11 @@ class Player implements PlayerInformation {
         }
     }
 
-    public resetStats(gameInstance: string) {
-        this.gameInstance = gameInstance;
-        this._lives = 1;
+    /**
+     * Resets the player stats and updates the database so the opponent can read it
+     */
+    public resetStats() {
+        this._lives = 20;
         this._money = 225;
         this._isAlive = true;
         this.won = false;
@@ -101,8 +102,8 @@ class Player implements PlayerInformation {
         return this._money;
     }
 
-    public spendMoney(money: number) {
 
+    public spendMoney(money: number) {
         if (this.mainOrOpponent !== "opponent") {
             if (money <= 0) {
                 throw new Error("Not a valid input");

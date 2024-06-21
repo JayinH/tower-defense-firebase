@@ -5,6 +5,7 @@ import { update, ref, get
 import { FirebaseClient } from "./firebaseApp.js";
 class GameTracker {
     player;
+    gameInstance;
     opponentOrMain;
     _currentWave = 0;
     _enemiesKilledInWave = 0;
@@ -23,17 +24,10 @@ class GameTracker {
     _enemiesKilledText = this._topMenu.querySelector('.enemies-killed');
     _livesLostText = this._topMenu.querySelector('.lives-lost');
     _livesAtStartOfWave = 50;
-    constructor(player, opponentOrMain) {
+    constructor(player, gameInstance, opponentOrMain) {
         this.player = player;
+        this.gameInstance = gameInstance;
         this.opponentOrMain = opponentOrMain;
-        // update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
-        //     currentWave: 0,
-        //     doingWave: false,
-        //     enemiesKilledInWave: this.enemiesKilledInWave,
-        //     totalEnemiesInWave: this.totalEnemiesInWave,
-        //     livesLostInWave: this.livesLostInWave,
-        //     totalLivesLost: this.totalLivesLost
-        // });
         if (opponentOrMain === "opponent") {
             this._topMenu = document.querySelector('.opponent-top-menu');
             this._livesText = this._topMenu.querySelector('.lives');
@@ -42,7 +36,6 @@ class GameTracker {
             this._enemiesKilledText = this._topMenu.querySelector('.enemies-killed');
             this._livesLostText = this._topMenu.querySelector('.lives-lost');
         }
-        console.log(player);
         this._livesAtStartOfWave = player.lives;
     }
     // Getters for private variables
@@ -94,11 +87,14 @@ class GameTracker {
     increaseCountdownCounter() {
         this._countdownCounter++;
     }
+    /**
+     * The database is updated when a player loses a life
+     */
     loseLife() {
         if (this.opponentOrMain !== "opponent") {
             this._livesLostInWave++;
             this._totalLivesLost++;
-            update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
+            update(ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.player.id}`), {
                 livesLostInWave: this._livesLostInWave,
                 totalLivesLost: this._totalLivesLost
             }).then(() => { });
@@ -106,10 +102,11 @@ class GameTracker {
     }
     /**
      * Updates the screen with all of the following information during waves
+     * The split screen data replicates that of the main screen
      */
     manage() {
         if (this.opponentOrMain === "opponent") {
-            const otherPlayerRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}`);
+            const otherPlayerRef = ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.opponentId}`);
             get(otherPlayerRef)
                 .then((otherPlayerSnapshot) => {
                 const otherPlayerData = otherPlayerSnapshot.val();
@@ -131,10 +128,11 @@ class GameTracker {
     }
     /**
      * Updates the screen with all of the following information in between waves
+     * The split screen data relicates the main screen
      */
     manageInBetweenWaves() {
         if (this.opponentOrMain === "opponent") {
-            const otherPlayerRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.opponentId}`);
+            const otherPlayerRef = ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.opponentId}`);
             get(otherPlayerRef)
                 .then((otherPlayerSnapshot) => {
                 const otherPlayerData = otherPlayerSnapshot.val();
@@ -177,7 +175,7 @@ class GameTracker {
     increaseEnemiesInWave() {
         if (this.opponentOrMain !== "opponent") {
             this._totalEnemiesInWave++;
-            update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
+            update(ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.player.id}`), {
                 totalEnemiesInWave: this._totalEnemiesInWave
             }).then(() => { });
         }
@@ -189,7 +187,7 @@ class GameTracker {
         if (this.opponentOrMain !== "opponent") {
             this._totalEnemiesKilled++;
             this._enemiesKilledInWave++;
-            update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
+            update(ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.player.id}`), {
                 enemiesKilledInWave: this.enemiesKilledInWave,
                 totalEnemiesKilled: this.totalEnemiesKilled
             }).then(() => { });
@@ -210,6 +208,10 @@ class GameTracker {
             return false;
         }
     }
+    /**
+     *
+     * @param enemiesAmount - number of enemies in the wave
+     */
     waveStart(enemiesAmount) {
         this._currentWave++;
         if (this.opponentOrMain !== "opponent") {
@@ -217,13 +219,12 @@ class GameTracker {
             this._livesLostInWave = 0;
             this._livesAtStartOfWave = this.player.lives;
             this._totalEnemiesInWave = enemiesAmount;
-            update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
+            update(ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.player.id}`), {
                 enemiesKilledInWave: 0,
                 livesLostInWave: 0,
                 totalEnemiesInWave: this._totalEnemiesInWave
             }).then(() => { });
-            console.log('updating over here on line 256');
-            update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}`), {
+            update(ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.player.id}`), {
                 currentWave: this.currentWave,
                 doingWave: true
             });

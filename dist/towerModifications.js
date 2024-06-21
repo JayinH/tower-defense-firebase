@@ -6,15 +6,19 @@ import { FirebaseClient } from "./firebaseApp.js";
 import { CanvasManager } from "./canvasmanager.js";
 class TowerModificationsManager {
     player;
+    gameInstance;
     selectedTower = null;
     sideMenu = document.querySelector('.side-menu');
     selectedTowerIndex;
-    constructor(player) {
+    constructor(player, gameInstance) {
         this.player = player;
+        this.gameInstance = gameInstance;
     }
+    /**
+     * Adds the passed in upgrade to the database to be read and incorporated in the TowerManager class
+     */
     addOpponentUpgrade(upgrade, direction) {
-        const towerUpgradesRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players/${CanvasManager.instance.player.id}/towerUpgrades`);
-        // Use push to add the enemy value to the array-like structure
+        const towerUpgradesRef = ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.player.id}/towerUpgrades`);
         if (direction) {
             push(towerUpgradesRef, ({
                 towerIndex: this.selectedTowerIndex,
@@ -23,11 +27,9 @@ class TowerModificationsManager {
                 confirmedByPlayer: false,
                 confirmedByOpponent: false
             }))
-                .then(() => {
-                console.log('Tower Upgrade added successfully');
-            })
+                .then(() => { })
                 .catch((error) => {
-                console.error('Error adding Tower:', error);
+                throw new Error('Error adding Tower:', error);
             });
         }
         else {
@@ -37,11 +39,9 @@ class TowerModificationsManager {
                 confirmedByPlayer: false,
                 confirmedByOpponent: false
             }))
-                .then(() => {
-                console.log('Tower upgrade maybe added successfully');
-            })
+                .then(() => { })
                 .catch((error) => {
-                console.error('Error adding Tower:', error);
+                throw new Error('Error adding Tower:', error);
             });
         }
     }
@@ -79,31 +79,13 @@ class TowerModificationsManager {
                 if (randomizeBulletColorBtn) {
                     randomizeBulletColorBtn.addEventListener('click', e => {
                         this.addOpponentUpgrade("Random Bullet Color");
-                        // if (this.selectedTower) this.player.spendMoney(this.selectedTower.upgradeCost);
-                        // this.selectedTower?.increaseUpgradeCost();
-                        // this.selectedTower?.addUpgrade('Random Bullet Color');
-                        // if (this.selectedTower instanceof LinearTower) {
-                        //     this.selectedTower.randomizeBulletColor();
-                        // }
                     });
                 }
                 increaseSpeedBtn.addEventListener('click', e => {
                     this.addOpponentUpgrade("Increase Speed");
-                    // if (this.selectedTower) this.player.spendMoney(this.selectedTower.upgradeCost);
-                    // this.selectedTower?.increaseUpgradeCost();
-                    // this.selectedTower?.addUpgrade('Increase Speed');
-                    // if (this.selectedTower instanceof LinearTower) {
-                    //     this.selectedTower.upgradeSpeed();
-                    // }
                 });
                 increaseAttackBtn.addEventListener('click', e => {
                     this.addOpponentUpgrade("Increase Attack");
-                    // if (this.selectedTower) this.player.spendMoney(this.selectedTower.upgradeCost);
-                    // this.selectedTower?.increaseUpgradeCost();
-                    // this.selectedTower?.addUpgrade('Increase Attack');
-                    // if (this.selectedTower instanceof LinearTower) {
-                    //     this.selectedTower.upgradeAttack();
-                    // }
                 });
             }
             else {
@@ -150,23 +132,11 @@ class TowerModificationsManager {
                         const changeDirectionBtn = button;
                         changeDirectionBtn.addEventListener('click', e => {
                             this.addOpponentUpgrade(`Add ${changeDirectionBtn.value} direction`, changeDirectionBtn.value);
-                            // if (this.selectedTower instanceof DirectionTower) {
-                            //     this.selectedTower?.addUpgrade(`Add ${changeDirectionBtn.value} direction`);
-                            //     if (this.selectedTower) this.player.spendMoney(this.selectedTower.upgradeCost);
-                            //     this.selectedTower.increaseUpgradeCost();
-                            //     this.selectedTower.addDirection(changeDirectionBtn.value);
-                            // }
                         });
                     }
                 }
                 increaseSpeedBtn.addEventListener('click', e => {
                     this.addOpponentUpgrade("Increase Speed");
-                    // if (this.selectedTower instanceof DirectionTower) {
-                    //     if (this.selectedTower) this.player.spendMoney(this.selectedTower.upgradeCost);
-                    //     this.selectedTower?.addUpgrade('Increase Speed');
-                    //     this.selectedTower.upgradeSpeed();
-                    //     this.selectedTower.increaseUpgradeCost();
-                    // }
                 });
             }
             else {
@@ -175,27 +145,6 @@ class TowerModificationsManager {
             }
         }
         if (this.selectedTower instanceof LinearRadiusTower) {
-            let firingOptions = `<div class="firing-options">
-            <button class="firing-option mt-2" value="furthest">Furthest Enemy</button>
-            <button class="firing-option mt-2" value="closest">Closest Enemy</button>
-            <button class="firing-option mt-2" value="strongest">Strongest Enemy</button>
-            </div>`;
-            this.sideMenu.innerHTML = firingOptions;
-            setTimeout(() => {
-                const firingChoices = document.querySelectorAll('.firing-option');
-                if (firingChoices.length > 0) { // Ensure elements are found
-                    firingChoices.forEach((button, index) => {
-                        const currentButton = button;
-                        currentButton.addEventListener('click', e => {
-                            if (this.selectedTower instanceof LinearRadiusTower) {
-                                this.selectedTower.setFiringMethod(currentButton.value);
-                            }
-                        });
-                    });
-                }
-                else {
-                }
-            }, 0);
             let content = `<span>Current Upgrades: `;
             if (currentUpgrades.length === 2) {
                 if (currentUpgrades[0] === currentUpgrades[1]) {
@@ -215,32 +164,19 @@ class TowerModificationsManager {
             if (currentUpgrades.length !== 2) {
                 content += ` <button class="increase-speed upgrade-button mt-2">Increase speed - $${this.selectedTower.upgradeCost}</button>
             <button class="increase-firing-radius upgrade-button mt-2">Increase firing radius - $${this.selectedTower.upgradeCost}</button>`;
-                this.sideMenu.innerHTML += content;
+                this.sideMenu.innerHTML = content;
                 const increaseSpeedBtn = document.querySelector('.increase-speed');
                 const increaseFiringRadiusBtn = document.querySelector('.increase-firing-radius');
                 increaseSpeedBtn.addEventListener('click', e => {
-                    // this.player.spendMoney(up)
-                    // if (this.selectedTower) this.player.spendMoney(this.selectedTower.upgradeCost);
                     this.addOpponentUpgrade("Increase Speed");
-                    // if (this.selectedTower instanceof LinearRadiusTower) {
-                    //     this.selectedTower?.addUpgrade('Increase Speed');
-                    //     this.selectedTower.upgradeSpeed();
-                    //     this.selectedTower?.increaseUpgradeCost();
-                    // }
                 });
                 increaseFiringRadiusBtn.addEventListener('click', e => {
                     this.addOpponentUpgrade("Increase Firing Radius");
-                    // if (this.selectedTower) this.player.spendMoney(this.selectedTower.upgradeCost);
-                    // this.selectedTower?.increaseUpgradeCost();
-                    // if (this.selectedTower instanceof LinearRadiusTower) {
-                    //     this.selectedTower?.addUpgrade('Increase Firing Radius');
-                    //     this.selectedTower.upgradeFiringRadius();
-                    // }
                 });
             }
             else {
                 content += `<div>This tower has been maxed out</div>`;
-                this.sideMenu.innerHTML += content;
+                this.sideMenu.innerHTML = content;
             }
         }
         if (this.selectedTower instanceof PathTower) {
@@ -267,12 +203,6 @@ class TowerModificationsManager {
                 const increaseAttackBtn = document.querySelector('.increase-attack');
                 increaseAttackBtn.addEventListener('click', e => {
                     this.addOpponentUpgrade("Increase Attack");
-                    // if (this.selectedTower) this.player.spendMoney(this.selectedTower.upgradeCost);
-                    // this.selectedTower?.increaseUpgradeCost();
-                    // this.selectedTower?.addUpgrade('Increase Attack');
-                    // if (this.selectedTower instanceof PathTower) {
-                    //     this.selectedTower.upgradeAttack();
-                    // }
                 });
             }
             else {

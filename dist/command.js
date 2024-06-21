@@ -267,10 +267,17 @@ class StartMenuCommand {
     constructor(menu) {
         this.menu = menu;
     }
+    /**
+     * On execution, the start menu will display
+     * When the button is clicked:
+     * The player will be created based on the entered nickname
+     * The player will be added to a database, accessible by it's unique id
+     * When the player leaves, they will be removed from the database
+     * The menu item command will be executed
+     */
     execute() {
         this.startGameButton.addEventListener('click', e => {
             this.startGameMenu.hidden = true;
-            console.log(this.nickname.value);
             const player = CanvasManager.instance.setPlayer(this.nickname.value);
             update(ref(FirebaseClient.instance.db, `/players/${player.id}`), {
                 id: player.id,
@@ -279,25 +286,25 @@ class StartMenuCommand {
             const gameRef = ref(FirebaseClient.instance.db, `/players/${player.id}`);
             onDisconnect(gameRef)
                 .set(null)
-                .then(() => {
-                console.log(`onDisconnect set up for player ${player.id}`);
-            })
-                .catch((error) => {
-                console.error(`Error setting up onDisconnect: ${error.message}`);
-            });
+                .then(() => { })
+                .catch((error) => { });
             this.menu.items[0].executeCommand();
         });
     }
 }
 class HostOrJoinCommand {
     menu;
-    // private startGameButton = document.querySelector('playAgainButton') as HTMLButtonElement;
     hostOrJoinMenu = document.querySelector('#hostOrJoinStart');
     hostButton = document.querySelector('#hostGameButton');
     joinButton = document.querySelector('#joinGameButton');
     constructor(menu) {
         this.menu = menu;
     }
+    /**
+     * On execution, the menu wll be displayed
+     * If the host button is clicked, the first menu item will be executed
+     * If the join button is clicked, the second menu item will be executed
+     */
     execute() {
         const disconnectMessage = document.querySelector('.disconnect-message');
         this.hostOrJoinMenu.hidden = false;
@@ -311,33 +318,34 @@ class HostOrJoinCommand {
             this.hostOrJoinMenu.hidden = true;
             this.menu.items[1].executeCommand();
         });
-        // this.startGameButton.addEventListener('click', e => {
-        //     this.menu.items[0].executeCommand();
-        // })
     }
 }
 class HostMenuCommand {
     menu;
     hostStart = document.querySelector('#hostStart');
     randomCodeSpot = document.querySelector('.random-code');
-    code;
     showButton = document.querySelector('.begin-game-loop');
     gameWrapper = document.querySelector('.game-wrapper');
     constructor(menu) {
         this.menu = menu;
-        // Constructor setup if needed
     }
+    /**
+     * On execution, the menu for the host will be displayed
+     * A random 5 digit id will be generated and have the database based on it
+     * The host detects when the guest has joined the game, and adds that player to the newly creates game branch
+     * The randomly generated code is displayed for the host to share
+     * The game stage is changed to game setup, for the guest to read on the database
+     * Disconenct is set up to delete the game branch when the host leaves
+     * Players joining/leaving are handled using onChildAdded/removed
+     */
     execute() {
         this.hostStart.hidden = false;
-        // const game = CanvasManager.instance.setGame();
         const connectionInstance = nanoid(5);
         CanvasManager.instance.setConnectionInstance(connectionInstance);
         onValue(ref(FirebaseClient.instance.db, `/players`), (snapshot) => {
             if (snapshot.val()) {
                 const results = (Object.keys(snapshot.val()).map((key) => [key, snapshot.val()[key]]));
-                console.log(results);
                 for (let i = 0; i < results.length; i++) {
-                    console.log(results[i]);
                     if (results[i][0] == CanvasManager.instance.player.id) {
                         update(ref(FirebaseClient.instance.db, `/games/${connectionInstance}/players/${results[i][0]}`), {
                             id: results[i][0],
@@ -346,17 +354,9 @@ class HostMenuCommand {
                         });
                     }
                 }
-                // console.log(results)
-            }
-            else {
-                throw new Error("Database not configured properly.");
             }
         }, { onlyOnce: true });
-        // Create a new game instance
         this.randomCodeSpot.innerHTML = `<i>${connectionInstance}`;
-        // Create a new player instance
-        // const player = new Player(10);
-        // Set up onDisconnect for this specific game
         const gameRef = ref(FirebaseClient.instance.db, `/games/${connectionInstance}`);
         update(ref(FirebaseClient.instance.db, `/games/${connectionInstance}`), {
             id: connectionInstance,
@@ -364,57 +364,53 @@ class HostMenuCommand {
         });
         onDisconnect(gameRef)
             .set(null)
-            .then(() => {
-            console.log(`onDisconnect set up for game ${connectionInstance}`);
-        })
+            .then(() => { })
             .catch((error) => {
-            console.error(`Error setting up onDisconnect: ${error.message}`);
+            throw new Error(`Error setting up onDisconnect: ${error.message}`);
         });
-        // Perform any other operations related to game setup or player initialization
-        // update(ref(FirebaseClient.instance.db, `/games/${game.id}/players/${player.id}`), {
-        //     host: true,
-        //     id: player.id
-        // });
-        // Set up a listener to detect when another player joins
         const playersRef = ref(FirebaseClient.instance.db, `/games/${connectionInstance}/players`);
         onChildAdded(playersRef, (snapshot) => {
             const newPlayer = snapshot.val();
-            console.log(newPlayer);
-            console.log(`New player joined: ${newPlayer.id}`);
-            // Handle the new player joining
             this.handlePlayerJoin(newPlayer);
         });
         onChildRemoved(playersRef, (snapshot) => {
             this.handlePlayerDelete(snapshot.val());
         });
     }
+    /**
+     * @param player - the player joining the game
+     * Assuming the player joined is not the same player that's hosting the game:
+     * The host is able to see the nickname of the guest joining the game
+     * The CanvasManager sets the opponent according to their nickname
+     * The host now has the option to start the game
+     * Once the button to start the game is clicked, the menu is hidden and the first menu item is executed
+     */
     handlePlayerJoin(player) {
-        // Logic to handle a new player joining
         if (player.id !== CanvasManager.instance.player.id) {
             const playerJoined = document.querySelector('.player-joined');
             CanvasManager.instance.opponentId = player.id;
             playerJoined.innerHTML = (`${player.nickname} has joined the game.`);
-            this.showButton.hidden = false;
             CanvasManager.instance.setOpponent(player.nickname);
+            this.showButton.hidden = false;
             this.showButton.addEventListener('click', e => {
                 this.hostStart.hidden = true;
-                update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}`), {
-                    stage: "map selection"
-                });
                 this.menu.items[0].executeCommand();
             });
         }
-        // Update the game state, UI, etc.
     }
+    /**
+     * @param player - the player leavinig the game
+     * Assuming the player leaving is not the player who's hosting:
+     * The host gets the message that the player left the game
+     * The button to start the game is hidden
+     */
     handlePlayerDelete(player) {
-        // Logic to handle a new player joining
         if (player.id !== CanvasManager.instance.player.id) {
             const playerJoined = document.querySelector('.player-joined');
             this.gameWrapper.hidden = true;
             playerJoined.innerHTML = (`${player.nickname} has left the game.`);
             this.showButton.hidden = true;
         }
-        // Update the game state, UI, etc.
     }
 }
 class JoinMenuCommand {
@@ -423,19 +419,21 @@ class JoinMenuCommand {
     submitCodeButton = document.querySelector('#codeButton');
     codeInputValue = document.querySelector('.code-input');
     errorMessage = document.querySelector('.error-message');
-    results = [];
-    // private joinButton = document.querySelector('#joinButton') as HTMLButtonElement;
     constructor(menu) {
         this.menu = menu;
-        // onDisconnect(
-        //     set(ref(FirebaseClient.instance.db, "/games"), "")
-        // );
     }
+    /**
+     * Upon execution, the menu will be displayed
+     * Once the button to submit the game code is pressed, the database is searched to see if the ID was valid
+     * If the ID was valid, but the game is full, the user can't join
+     * If the ID is valid otherwise, the player joins the game and their information is transferred into the database
+     * Once they are transferred in, the first menu item is executed
+     * If they disconnect from the game, this newly created instance of the player in the game branch will be deleted
+     * If the ID is not valid, the user will get an error message
+     */
     execute() {
         this.joinStart.hidden = false;
         this.submitCodeButton.addEventListener('click', e => {
-            // const gameRef = (FirebaseClient.instance.db, `/games/${this.codeInputValue.id}`);
-            // console.log(gameRef)
             onValue(ref(FirebaseClient.instance.db, `/games/${this.codeInputValue.value}`), (snapshot) => {
                 if (snapshot.val()) {
                     if (Object.keys(snapshot.val().players).length === 2) {
@@ -446,9 +444,7 @@ class JoinMenuCommand {
                         onValue(ref(FirebaseClient.instance.db, `/players`), (snapshot) => {
                             if (snapshot.val()) {
                                 const results = (Object.keys(snapshot.val()).map((key) => [key, snapshot.val()[key]]));
-                                console.log(results);
                                 for (let i = 0; i < results.length; i++) {
-                                    console.log(results[i]);
                                     if (results[i][0] == CanvasManager.instance.player.id) {
                                         CanvasManager.instance.setConnectionInstance(this.codeInputValue.value);
                                         update(ref(FirebaseClient.instance.db, `/games/${this.codeInputValue.value}/players/${results[i][0]}`), {
@@ -461,23 +457,12 @@ class JoinMenuCommand {
                                 this.joinStart.hidden = true;
                                 this.menu.items[0].executeCommand();
                             }
-                            else {
-                                throw new Error("Database not configured properly.");
-                            }
                         }, { onlyOnce: true });
                         const gameRef = ref(FirebaseClient.instance.db, `/games/${this.codeInputValue.value}/players/${CanvasManager.instance.player.id}`);
                         onDisconnect(gameRef)
                             .set(null)
-                            .then(() => {
-                            console.log(`onDisconnect set up for player ${CanvasManager.instance.player.id}`);
-                        })
-                            .catch((error) => {
-                            console.error(`Error setting up onDisconnect: ${error.message}`);
-                        });
-                        // update(ref(FirebaseClient.instance.db, `/games/${this.codeInputValue.value}/players/${player.id}`), {
-                        //     id: player.id,
-                        //     host: false
-                        // });
+                            .then(() => { })
+                            .catch((error) => { });
                     }
                 }
                 else {
@@ -491,63 +476,64 @@ class JoinHostRoomCommand {
     menu;
     guestWaitingStart = document.querySelector('#guestWaitingStart');
     waitingText = document.querySelector('.waiting-text');
-    stage;
     constructor(menu) {
         this.menu = menu;
     }
+    /**
+     * @param player - the other player in the game (the host)
+     * Assuming the player is not the same as the user's player:
+     * The opponent ID is set the opponent's ID
+     * The game state is changed to game setup (not in the database)
+     */
     handlePlayerJoin(player) {
-        // Logic to handle a new player joining
         if (player.id !== CanvasManager.instance.player.id) {
             CanvasManager.instance.opponentId = player.id;
-            // const playerJoined = document.querySelector('.player-joined') as HTMLHeadingElement;
-            this.stage = CanvasManager.instance.setStage("game setup");
-            // playerJoined.innerHTML = (`${player.nickname} has joined the game.`);
+            CanvasManager.instance.setStage("game setup");
             CanvasManager.instance.setOpponent(player.nickname);
             this.waitingText.innerHTML = `Waiting for ${player.nickname} to start the game.`;
         }
-        // Update the game state, UI, etc.
     }
+    /**
+     * @param player - the host
+     * When the host disconnects, the guest will receive a message saying they disconnectd
+     * The third menu item's command will be executed (redirect to host/join menu)
+     */
     handlePlayerDelete(player) {
-        // Logic to handle a new player joining
         if (player.id !== CanvasManager.instance.player.id) {
             this.guestWaitingStart.hidden = true;
             const disconnectMessage = document.querySelector('.disconnect-message');
             disconnectMessage.hidden = false;
             this.menu.items[2].executeCommand();
         }
-        // Update the game state, UI, etc.
     }
+    /**
+     * Upon execution, the waiting menu will be displayed
+     * Player's joining/leaving will be handled with the handlePlayerJoin and handlePlayerDelete methods respectively
+     * When the game stage is being updated, the displayed message will be too accordingly
+     * When the game stage is in "game loop", a menu item will be executed, depending on the map selection stored in the database
+     */
     execute() {
         this.guestWaitingStart.hidden = false;
-        // console.log(CanvasManager.instance.connectionInstance)
         onValue(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players`), (snapshot) => {
             if (snapshot.val()) {
                 const playersRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players`);
                 onChildAdded(playersRef, (snapshot) => {
                     const newPlayer = snapshot.val();
-                    console.log(newPlayer);
-                    console.log(`New player joined: ${newPlayer.id}`);
-                    // Handle the new player joining
                     this.handlePlayerJoin(newPlayer);
                 });
                 onChildRemoved(playersRef, (snapshot) => {
                     this.handlePlayerDelete(snapshot.val());
                 });
             }
-            else {
-                throw new Error("Database not configured properly.");
-            }
         }, { onlyOnce: true });
         onValue(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}`), (snapshot) => {
             if (snapshot.exists()) {
                 const gameData = snapshot.val();
                 const currentStageValue = gameData.stage;
-                // console.log(gameData)
-                // console.log(currentStageValue)
-                // console.log(CanvasManager.instance.stage)
-                // Check if the stage property has changed
                 if (currentStageValue !== CanvasManager.instance.stage) {
-                    console.log(`Stage changed to: ${currentStageValue}`);
+                    const playAgainScreen = document.querySelector('#playAgain');
+                    playAgainScreen.hidden = true;
+                    this.guestWaitingStart.hidden = false;
                     this.waitingText.innerHTML = `Waiting for ${CanvasManager.instance.opponent.nickname} to select a map.`;
                     CanvasManager.instance.setStage(currentStageValue);
                     if (currentStageValue === "game loop") {
@@ -561,18 +547,8 @@ class JoinHostRoomCommand {
                     }
                 }
             }
-            else {
-                throw new Error("Database not configured properly.");
-            }
         }, { onlyOnce: false } // Listen for ongoing changes
         );
-    }
-}
-class PlayAgainCommand {
-    constructor() { }
-    playAgain = document.querySelector('#playAgain');
-    execute() {
-        this.playAgain.hidden = false;
     }
 }
 class LevelSelectionCommand {
@@ -581,8 +557,16 @@ class LevelSelectionCommand {
     constructor(menu) {
         this.menu = menu;
     }
+    /**
+     * Upon execution, the menu will be displayed and the stage will be set to map selection
+     * Depending on which button is pressed, a menu item will execute to start the game
+     * If a player disconnects, the handlePlayerDelete method is called
+     */
     execute() {
         this.levelSelection.hidden = false;
+        update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}`), {
+            stage: "map selection"
+        });
         const buttonHolder1 = document.querySelector('.button-1-place');
         const buttonHolder2 = document.querySelector('.button-2-place');
         buttonHolder1.innerHTML = `<button class="level-btn" value="1">Map 1</button>`;
@@ -607,15 +591,18 @@ class LevelSelectionCommand {
             this.handlePlayerDelete(snapshot.val());
         });
     }
+    /**
+     *
+     * @param player - the player being disconnected
+     * The map selection menu is hidden and the host is redirected to the 'waiting room'
+     */
     handlePlayerDelete(player) {
-        // Logic to handle a new player joining
         if (player.id !== CanvasManager.instance.player.id) {
             const guestDisconnect = document.querySelector('.player-joined');
             guestDisconnect.innerHTML = (`${player.nickname} has left the game.`);
             this.levelSelection.hidden = true;
             this.menu.items[2].executeCommand();
         }
-        // Update the game state, UI, etc.
     }
 }
 class BeginGameCommand {
@@ -625,40 +612,42 @@ class BeginGameCommand {
     constructor(mapNumber) {
         this.mapNumber = mapNumber;
     }
+    /**
+     *
+     * @param player - the player that disconnects
+     * When the player disconnects, the instance of the game is destroyed
+     */
     handlePlayerDelete(player) {
-        // Logic to handle a new player joining
         if (player.id !== CanvasManager.instance.player.id) {
-            // this.playAgain.hidden = false;
             const gameRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}`);
             onDisconnect(gameRef)
                 .set(null)
-                .then(() => {
-                console.log(`onDisconnect set up for game ${CanvasManager.instance.connectionInstance}`);
-            })
+                .then(() => { })
                 .catch((error) => {
-                console.error(`Error setting up onDisconnect: ${error.message}`);
+                throw new Error(`Error setting up onDisconnect: ${error.message}`);
             });
             CanvasManager.instance.endGame();
             this.gameWrapper.hidden = true;
+            this.playAgain.hidden = true;
         }
-        // Update the game state, UI, etc.
     }
+    /**
+     * Upon execution, the game state is set to game loop
+     * The map selection is pasted in the database for the guest to interpret
+     * The game is setup in the canvas manager
+     */
     execute() {
         update(ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}`), {
             mapSelection: this.mapNumber,
             stage: "game loop"
         });
-        console.log('game loop ig');
         const playersRef = ref(FirebaseClient.instance.db, `/games/${CanvasManager.instance.connectionInstance}/players`);
         onChildRemoved(playersRef, (snapshot) => {
             this.handlePlayerDelete(snapshot.val());
         });
         CanvasManager.instance.setStage("game loop");
         CanvasManager.instance.setGame(this.mapNumber);
-        CanvasManager.instance.setOpponentGame(this.mapNumber);
         CanvasManager.instance.setupGame();
-        // CanvasManager.instance.setupGame();
-        // CanvasManager.instance.game.mainLoop();
     }
 }
 export { StartMenuCommand, HostOrJoinCommand, HostMenuCommand, JoinMenuCommand, PlantTower, towerMoveSelection, TowerSelectionCommand, moveEnemyCommand, JoinHostRoomCommand, LevelSelectionCommand, BeginGameCommand };

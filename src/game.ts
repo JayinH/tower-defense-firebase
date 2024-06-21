@@ -118,7 +118,7 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
         player: Player,
         gameInstance: string
     ) {
-        player.resetStats(this.gameInstance);
+        player.resetStats();
         this._active = true;
         this.context = CanvasManager.GameCanvas.mainContext;
         this.gameInstance = gameInstance;
@@ -136,7 +136,7 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
     /**
      * If the game is no longer active, the main loop stops
      * The winner is determined and the game ends, returning data about who won and how many waves were completed
-     * A 300 ms second delay is placed so that the database has time to be updated before it's read  
+     * A 600 ms second delay is placed so that the database has time to be updated before it's read  
      */
     public mainLoop(): Promise<[string, number, number]> {
         return new Promise((resolve) => {
@@ -152,10 +152,10 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
                                 enemiesKilled: this.gameTracker.totalEnemiesKilled,
                                 wavesCompleted: this.gameTracker.currentWave - 1
                             });
-                            this.opponentGame.inactivate();
                             setTimeout(() => {
+                                this.opponentGame.inactivate();
                                 resolve(["You lost.", this.gameTracker.totalEnemiesKilled, this.gameTracker.currentWave - 1]);
-                              }, 300);
+                              }, 600);
                             
                         } else {
                             update(ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${this.player.id}`), {
@@ -165,10 +165,10 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
                                 enemiesKilled: this.gameTracker.totalEnemiesKilled,
                                 wavesCompleted: this.gameTracker.currentWave  - 1
                             });
-                            this.opponentGame.inactivate();
                             setTimeout(() => {
+                                this.opponentGame.inactivate();
                                 resolve(["You won!", this.gameTracker.totalEnemiesKilled, this.gameTracker.currentWave]);
-                              }, 300);
+                              }, 600);
                            
                         }
                     } else {
@@ -179,14 +179,13 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
                                 lost: false,
                                 enemiesKilled: this.gameTracker.totalEnemiesKilled,
                                 wavesCompleted: this.gameTracker.currentWave
-                            });    
-                            this.opponentGame.inactivate();
-                            setTimeout(() => {
+                            });   
+                            setTimeout(() => { 
+                                this.opponentGame.inactivate();
                                 resolve(["You won!", this.gameTracker.totalEnemiesKilled, this.gameTracker.currentWave]);
-                              }, 300);                        
+                              }, 600);                        
                             
                         } else {
-
                             update(ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${this.player.id}`), {
                                 isAlive: false,
                                 won: false,
@@ -194,10 +193,10 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
                                 enemiesKilled: this.gameTracker.totalEnemiesKilled,
                                 wavesCompleted: this.gameTracker.currentWave - 1
                             });
-                            this.opponentGame.inactivate();
                             setTimeout(() => {
+                                this.opponentGame.inactivate();
                                 resolve(["You lost!", this.gameTracker.totalEnemiesKilled, this.gameTracker.currentWave]);
-                              }, 300);    
+                              }, 600);    
                         }
                     }
 
@@ -230,7 +229,7 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
                         if (!otherPlayerData.doingWave) {
                             currentButton.hidden = true;
                         } else {
-                            let enemyLag = -0;
+                            let enemyLag = 0;
                             if (parseInt(currentButton.value) >= 4) enemyLag = 1;
                             if (parseInt(currentButton.value) + enemyLag < otherPlayerWave) {
                                 if(parseInt(currentButton.value) === 1) {
@@ -266,7 +265,6 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
                                 }
                                 currentButton.hidden = false;
                             } else {
-                               
                                 currentButton.hidden = true;
                             }
                         }
@@ -331,14 +329,18 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
         const playerRef = ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${CanvasManager.instance.opponentId}`);
         this.playerDeathUnsubscribe = onValue(playerRef, (snapshot) => {
             const information = snapshot.val();
+            
             if (information.isAlive === false) {
-                if (information.won) {
-                    this.player.lost = true;
-                    this.player.won = false;
-                } else {
-                    this.player.won = true;
-                    this.player.lost = false;
+                if(this.active) {
+                    if (information.won) {
+                        this.player.lost = true;
+                        this.player.won = false;
+                    } else {
+                        this.player.won = true;
+                        this.player.lost = false;
+                    }
                 }
+                
                 this.inactivate();
             }
         });
@@ -567,7 +569,7 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
             this.updateEnemies();
             this.updateBullets();
             this.moveEnemy();
-            this._gameTracker.manage()
+            this._gameTracker.manage();
         } else {
             this._enemyCounter = 0;
             this.checkIfTimeToStartWave();
@@ -576,8 +578,8 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
     }
 
     private checkPlayerStatus(): void {
-        this.player.won = false;
-        this.player.lost = true;
+        // this.player.won = false;
+        // this.player.lost = true;
         if (!this.player.isAlive) this.inactivate();
     }
 
@@ -631,8 +633,7 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
         if (!this._enemies.length && !this._allEnemyInfo.length) {
             if (!this.endWaveMessageSent) {
                 this._player.receiveMoney(20);
-                this._towerManager.inactivateBullets()
-                // this._ongoingWave = false;
+                this._towerManager.inactivateBullets();
                 push(ref(FirebaseClient.instance.db, `/games/${this.gameInstance}/players/${this.player.id}/ongoingWave`), {
                     ongoingWave: false,
                     confirmedByPlayer: false,
@@ -676,7 +677,7 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
         if (this._allEnemyInfo.length) {
             const enemyMaker = new EnemyMaker(this.context, this._allEnemyInfo[0].x, this._allEnemyInfo[0].y, this._allEnemyInfo[0].r, this._pathBlocks, this._player, this._allEnemyInfo[0].level);
             const newEnemy: Enemy = enemyMaker.makeEnemy();
-            this._allEnemyInfo.shift()
+            this._allEnemyInfo.shift();
             this._enemies.push(newEnemy);
         }
     }
@@ -715,7 +716,7 @@ class Game implements GameConstants, GameEnemyInfo, GameMapInfo, GameWaveInfo, G
                 this._waveInfo = this._wave.createNewWave();
                 this._allEnemyInfo = this._waveInfo[0];
                 this._enemyInterval = this._waveInfo[1];
-                this._gameTracker.waveStart(this._allEnemyInfo.length)
+                this._gameTracker.waveStart(this._allEnemyInfo.length);
 
             }
             this._gameTracker.resetCoundtownCounter();
