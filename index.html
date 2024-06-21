@@ -3,6 +3,9 @@
 
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv='cache-control' content='no-cache'>
+  <meta http-equiv='expires' content='0'>
+  <meta http-equiv='pragma' content='no-cache'>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tower Defense Game</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,6 +14,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link rel="stylesheet" href="index.css" />
+
 </head>
 
 <body>
@@ -53,8 +57,8 @@
         </div>
       </div>
     </div>
-   
-   
+
+
 
     <div class="game-container">
       <canvas id="game_screen"></canvas>
@@ -81,26 +85,26 @@
     </div>
     <div class="selection-screen-canvas">
 
-    
-    <canvas id="selection_screen"></canvas>
-    <div class="send-enemy-menu">
-      <button class="send-enemy-button" value="1">Send enemy 1 - $10</button>
-      <button class="send-enemy-button" value="12">Send enemy 2 - $12</button>
-      <button class="send-enemy-button" value="12">Send enemy 3 - $12</button>
-      <button class="send-enemy-button" value="4">Send enemy 4 - $50</button>
-      <button class="send-enemy-button" value="5">Send enemy 5 - $15</button>
-      <button class="send-enemy-button" value="6">Send enemy 6 - $17</button>
+
+      <canvas id="selection_screen"></canvas>
+      <div class="send-enemy-menu">
+        <button class="send-enemy-button" value="1">Send enemy 1 - $10</button>
+        <button class="send-enemy-button" value="12">Send enemy 2 - $12</button>
+        <button class="send-enemy-button" value="12">Send enemy 3 - $12</button>
+        <button class="send-enemy-button" value="4">Send enemy 4 - $50</button>
+        <button class="send-enemy-button" value="5">Send enemy 5 - $15</button>
+        <button class="send-enemy-button" value="6">Send enemy 6 - $17</button>
+      </div>
     </div>
   </div>
-  </div>
-    <img src="Images/arrow.png" alt="Arrow" id="arrow" width="100" height="100" hidden />
-    <!-- <img src="Images/balloonBattles.PNG" alt="Balloon Battles text" id="balloonBattles" width="600" height="400"
+  <img src="Images/arrow.png" alt="Arrow" id="arrow" width="100" height="100" hidden />
+  <!-- <img src="Images/balloonBattles.PNG" alt="Balloon Battles text" id="balloonBattles" width="600" height="400"
       hidden /> -->
-    <!-- <img src="Images/play.PNG" alt="Play button" id="playButton" width="600" height="400" hidden /> -->
-    <img src="Images/catapult2.png" alt="Catapult" id="catapult" width="100" height="100" hidden />
-    <img src="Images/lightning.png" alt="Lightning" id="lightning" width="100" height="100" hidden />
+  <!-- <img src="Images/play.PNG" alt="Play button" id="playButton" width="600" height="400" hidden /> -->
+  <img src="Images/catapult2.png" alt="Catapult" id="catapult" width="100" height="100" hidden />
+  <img src="Images/lightning.png" alt="Lightning" id="lightning" width="100" height="100" hidden />
 
-   
+
   </div>
   <div class="game-over-menu game-menu">
     <div hidden id="playAgain" class="gameMenuId">
@@ -109,7 +113,7 @@
         <div class="w-or-l"></div>
         <div class="final-enemies-killed"></div>
         <div class="waves-completed"></div>
-        
+
         <br>
 
         <div class="opponent-final-enemies-killed"></div>
@@ -130,7 +134,7 @@
         <img src="Images/level2.png" alt="Hard Map" class="map-image">
         <span class="button-2-place"><button class="level-btn" value="2">Map 2</button></span>
       </div>
-      
+
     </div>
     <div>If it's your lucky day, the game may give you a tower to start off with ;)</div>
   </div>
@@ -138,7 +142,9 @@
     <div id="gameStart" class="gameMenuId">
       <div class="gameStartPage gameMenuPage text-center">
         <h1>Welcome to Balloon Battles! Enter a nickname to begin:</h1>
-        <div class="row"><div class="col-12"><input type="text" class="nickname form-control" placeholder="Nickname"></div></div>
+        <div class="row">
+          <div class="col-12"><input type="text" class="nickname form-control" placeholder="Nickname"></div>
+        </div>
         <button id="gameStartButton" class="gameButton mt-3 text-center">Play game</button>
       </div>
     </div>
@@ -149,10 +155,10 @@
       <div class="hostOrJoinPage gameMenuPage">
         <h1>Hosting or joining</h1>
         <span>
-        <button id="hostGameButton" class="gameButton">Host a game</button>
-        <button id="joinGameButton" class="gameButton">Join a game</button>
-      </span>
-      <h5 class="disconnect-message mt-3" hidden>You have been disconnected since the opponent left the game.</h5>
+          <button id="hostGameButton" class="gameButton">Host a game</button>
+          <button id="joinGameButton" class="gameButton">Join a game</button>
+        </span>
+        <h5 class="disconnect-message mt-3" hidden>You have been disconnected since the opponent left the game.</h5>
       </div>
     </div>
   </div>
@@ -161,7 +167,7 @@
     <div hidden id="hostStart" class="gameMenuId">
       <div class="hostPage gameMenuPage">
         <h1 class="text-center">Here is your randomly generated code: </h1>
-       <h2 class="random-code"></h2>
+        <h2 class="random-code"></h2>
         <h4 class="player-joined"></h4>
         <h4 class="guest-disconnect"></h4>
         <button class="begin-game-loop" hidden>Begin Game</button>
@@ -175,9 +181,11 @@
         <h1>Enter game code:</h1>
         <h6 class="error-message"></h6>
         <span>
-          <div class="row"><div class="col-12"><input type="text" class="code-input form-control" placeholder="e.g. A6g4"></div></div>
-        <button id="codeButton" class="gameButton mt-3 text-center">Enter</button>
-      </span>
+          <div class="row">
+            <div class="col-12"><input type="text" class="code-input form-control" placeholder="e.g. A6g4"></div>
+          </div>
+          <button id="codeButton" class="gameButton mt-3 text-center">Enter</button>
+        </span>
       </div>
     </div>
   </div>
